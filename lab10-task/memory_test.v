@@ -43,11 +43,33 @@ module memory_test;
 ////////////////////////////////////////////
 //TO-DO: CODE THE WRITE TASK AS INSTRUCTED//
 ////////////////////////////////////////////
+  task write;
+    input [AWIDTH-1:0] addr_to_write;
+    input [DWIDTH-1:0] data_to_write;
+    begin
+      memory_test.addr = addr_to_write;
+      memory_test.wr = 1;
+      memory_test.rd = 0;
+      memory_test.rdata = data_to_write;
+      @(negedge clk);
+    end
+  endtask
 
 
 ////////////////////////////////////////////
 //TO-DO: CODE THE READ TASK AS INSTRUCTED///
 ////////////////////////////////////////////
+  task read;
+    input [AWIDTH-1:0] addr_to_read;
+    output [DWIDTH-1:0] data_read;
+    begin
+      memory_test.addr = addr_to_read;
+      memory_test.wr = 0;
+      memory_test.rd = 1;
+      @(negedge clk);
+      data_read = memory_test.data;
+    end
+  endtask
 
   
   initial repeat (67) begin #5 clk=1; #5 clk=0; end
@@ -65,6 +87,7 @@ module memory_test;
     addr=-1; data=0;
     while ( addr ) begin
       read(addr,data);
+      expect(data);
       addr=addr-1;
       data=data+1;
     end
