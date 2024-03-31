@@ -66,6 +66,7 @@ module memory_test;
       memory_test.addr = addr_to_read;
       memory_test.wr = 0;
       memory_test.rd = 1;
+      memory_test.rdata = 'bz;
       @(negedge clk);
       data_read = memory_test.data;
     end
