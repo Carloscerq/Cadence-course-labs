@@ -29,13 +29,13 @@ module priority7 ( y, a ) ;
     y = 0;
 
     case(1)
-      a[7]: y = 7;
-      a[6]: y = 6;
-      a[5]: y = 5;
-      a[4]: y = 4;
-      a[3]: y = 3;
-      a[2]: y = 2;
       a[1]: y = 1;
+      a[2]: y = 2;
+      a[3]: y = 3;
+      a[4]: y = 4;
+      a[5]: y = 5;
+      a[6]: y = 6;
+      a[7]: y = 7;
     endcase
   end
 endmodule
