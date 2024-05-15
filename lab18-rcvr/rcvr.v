@@ -27,11 +27,13 @@ module rcvr
         // INITIALIZE PHASE TO SHIFTING HEADER
         // INITIALIZE HEADER TO OPPOSITE OF LEFTMOST MATCH BIT
         // INITIALIZE CONTROL REGISTERS TO INACTIVE STATE (IGNORE DATA PATH)
-
-
-
-
-
+        ready   <= 0 ;
+        overrun <= 0 ;
+        data_out <= 0 ;
+        count <= 0 ;
+        body_reg <= 0 ;
+        head_reg <= 0 ;
+        phase <= SHIFT_HEAD ;
 
       end
 
@@ -39,35 +41,48 @@ module rcvr
 
         // IF PHASE IS SHIFT_BODY THEN CLEAR HEAD REGISTER, ELSE
         // IF PHASE IS SHIFT_HEAD THEN SHIFT INPUT DATA LEFT INTO HEAD REGISTER
-
-
-
-
+        if (phase == SHIFT_BODY)
+            head_reg <= 0 ;
+        else
+            head_reg <= {head_reg[5:0], data_in} ;
 
         // IF CONCATENATION OF HEAD REG AND INPUT DATA IS MATCH CHARACTER THEN
         // SET PHASE TO SHIFT_BODY, ELSE
         // IF COUNT IS 7 THEN SET PHASE BACK TO SHIFT_HEAD
-
-
-
-
+        if ({head_reg, data_in} == MATCH)
+            phase <= SHIFT_BODY ;
+        else if (count == 7)
+            phase <= SHIFT_HEAD ;
 
         // IF PHASE IS SHIFT_BODY THEN INCREMENT COUNT
+        if (phase == SHIFT_BODY)
+            count <= count + 1 ;
 
 
         // IF PHASE IS SHIFT_BODY THEN SHIFT INPUT DATA LEFT INTO BODY REGISTER
+        if (phase == SHIFT_BODY)
+            body_reg <= {body_reg[5:0], data_in} ;
 
 
         // IF COUNT IS 7 THEN COPY CONCATENATION OF BODY REGISTER AND INPUT DATA
         // TO OUTPUT DATA
+        if (count == 7)
+            data_out <= {body_reg, data_in} ;
 
 
         // IF COUNT IS 7 THEN SET READY ELSE IF READING THEN CLEAR READY
+        if (count == 7)
+            ready <= 1 ;
+        else if (reading)
+            ready <= 0 ;
 
 
         // IF READING THEN CLEAR OVERRUN, ELSE
         // IF COUNT IS 7 AND STILL READY THEN SET OVERRUN
-
+        if (reading)
+            overrun <= 0 ;
+        else if (count == 7 && ready)
+            overrun <= 1 ;
 
       end
 
