@@ -122,17 +122,23 @@ module test;
       || TWO_DIME_OUT !== expect_two_dime_out
       || USE_EXACT    !== expect_use_exact )
       begin
-      //TODO: ADD THE INSTRUCTED CODE HERE
+      $display ("ERROR: expected EMPTY=%b, DISPENSE=%b, NICKEL_OUT=%b, DIME_OUT=%b, TWO_DIME_OUT=%b, USE_EXACT=%b",
+                 expect_empty, expect_dispense, expect_nickel_out, expect_dime_out, expect_two_dime_out, expect_use_exact);
+      $finish;
       end
   endtask
 
   // clock
   initial repeat (62) begin CLK=1; #0.5; CLK=0; #0.5; end
 
+
   initial
     begin : TEST
       integer interactive;
+      $timeformat(-9, 1, " ns", 1);
+      $monitor("CANS %d ;  COINS %d,%d ;  INSERT %d,%d,%d ;  TIME %t", CANS, NICKELS, DIMES, NICKEL_IN, DIME_IN, QUARTER_IN, $realtime);
       $display ("CANS 1 ;  COINS 0,0 ;  INSERT 0,0,2"); // 50
+      $display ("Starting time: %t", $realtime);
       reset;           expect (1, 0, 0, 0, 0, 1); // EMPTY, USE_EXACT
       add_cans(1);     expect (0, 0, 0, 0, 0, 1); // USE_EXACT
       insert_quarter;  expect (0, 0, 0, 0, 0, 1); // USE_EXACT
