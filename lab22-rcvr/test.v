@@ -39,11 +39,8 @@ module test;
     body2 = $random;
     body3 = $random;
     body4 = $random;
-    stream = { 32'h0, HEADER_VALUE, body1,
-               16'h0, HEADER_VALUE, body2,
-               64'h0, HEADER_VALUE, body3,
-               32'h0, HEADER_VALUE, body4,
-               16'h0 };
+    stream = { 32'h0, 8'ha5, body1, 16'h0, 8'ha5, body2,
+              64'h0, 8'ha5, body3, 32'h0, 8'ha5, body4, 16'h0 } ;
 
     @(negedge sclk) rst <= 1;
     @(negedge sclk) rst <= 0; sdata <= 0;
@@ -55,7 +52,10 @@ module test;
     $display("Sent %d frames", f_sent);
     $display("frams rcvd: %d", f_rcvd);
 
-    (f_rcvd == f_sent) ? $display("Test passed") : $display("Test failed");
+    if (f_sent != f_rcvd)
+      $display("Frames sent and received mismatch");
+    else
+      $display("Frames sent and received match");
 
     $finish;
   end
@@ -76,7 +76,7 @@ module test;
       @(negedge sclk) ack <= 1; data_rcvd <= data_rcvd << 8 | dout;
       @(negedge sclk) ack <= 0;
       $display("%t: Frame %d received", $time, data_rcvd);
-      if (data_rcvd != data_rcvd_arr[i]) begin
+      if (data_rcvd !== data_rcvd_arr[i]) begin
         $display("Frame %d mismatch", i);
         $display("Expected: %h", data_rcvd_arr[i-1]);
         $display("Received: %h", data_rcvd);
