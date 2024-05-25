@@ -2,88 +2,87 @@
 `define CLOCK_TIME 5
 
 module test;
-  reg sclk = 1, rst, sdata, ack;
-  wire ready;
-  wire [7:0] dout;
+  reg SCLK;
+  reg RST;
+  reg SDATA;
+  reg ACK;
+  wire READY;
+  wire [7:0] DOUT;
 
-  localparam BODY_SIZE = 16;
-  localparam HEADER_SIZE = 8;
-  localparam HEADER_VALUE = 8'hA5;
+  localparam integer HEADER_SIZE = 8
+  localparam integer HEADER_VALUE = 8'ha5
+  localparam integer BODY_SIZE = 16
 
-
-  rcvr #(.BODY_SIZE(BODY_SIZE),
+  rcv #(
     .HEADER_SIZE(HEADER_SIZE),
-    .HEADER_VALUE(HEADER_VALUE)) r1 (
-    .SCLK(sclk),
-    .RST(rst),
-    .SDATA(sdata),
-    .ACK(ack),
-    .READY(ready),
-    .DOUT(dout)
+    .HEADER_VALUE(HEADER_VALUE),
+    .BODY_SIZE(BODY_SIZE)
+  ) rcv1(
+    .SCLK(SCLK),
+    .RST(RST),
+    .SDATA(SDATA),
+    .ACK(ACK),
+    .READY(READY),
+    .DOUT(DOUT)
   );
 
+  integer frames_sent=0, frames_rcvd=0 ;
+  reg [15:0] BODY1, BODY2, BODY3, BODY4 ;
+
   always begin
-    #(`CLOCK_TIME) sclk = ~sclk;
+    #`CLOCK_TIME SCLK = ~SCLK;
   end
 
-  reg [BODY_SIZE-1:0] body1, body2, body3, body4;
-  integer f_sent=0, f_rcvd=0;
-
-  $display("Initialising the testbench...");
-  $timeformat(-9, 1, " ns", 10);
-
-  initial begin : STIM
-    reg [255 : 0] stream;
+  initial begin
+    reg [0:255] stream;
     integer bit;
-    body1 = $random;
-    body2 = $random;
-    body3 = $random;
-    body4 = $random;
-    stream = { 32'h0, 8'ha5, body1, 16'h0, 8'ha5, body2,
-              64'h0, 8'ha5, body3, 32'h0, 8'ha5, body4, 16'h0 } ;
+    BODY1 = $random;
+    BODY2 = $random;
+    BODY3 = $random;
+    BODY4 = $random;
+    stream = { 32'h0, 8'ha5, BODY1, 16'h0, 8'ha5, BODY2,
+               64'h0, 8'ha5, BODY3, 32'h0, 8'ha5, BODY4, 16'h0 } ;
 
-    @(negedge sclk) rst <= 1;
-    @(negedge sclk) rst <= 0; sdata <= 0;
-    for (bit = 1; bit < 256; bit = bit + 1)
-      @(negedge sclk) sdata <= stream[bit];
-    @(negedge sclk);
-    $display("%t: Stimulus complete", $time);
-    f_sent = 4;
-    $display("Sent %d frames", f_sent);
-    $display("frams rcvd: %d", f_rcvd);
-
-    if (f_sent != f_rcvd)
-      $display("Frames sent and received mismatch");
-    else
-      $display("Frames sent and received match");
-
+    $timeformat ( -9, 0, "ns", 5 ) ;
+    @(negedge SCLK) RST <= 1 ;
+    @(negedge SCLK) RST <= 0 ; SDATA <= 0 ;
+    for (bit=1; bit<=256; bit=bit+1)
+      @(negedge SCLK) SDATA <= stream[bit] ;
+    @(negedge SCLK);
+    $display ( "%t: Stimulus process complete", $time ) ;
+    frames_sent = 4 ;
+    $display ( "%t: frames_sent=%0d, frames_rcvd=%0d",
+               $time, frames_sent, frames_rcvd ) ;
+    $display ("TEST %s",((frames_sent==frames_rcvd)?"PASSED":"FAILED"));
     $finish;
   end
 
-
-  initial begin : RESP
-    reg [BODY_SIZE-1:0] data_rcvd, data_rcvd_arr [0:3];
-    integer i;
-    @(negedge sclk);
-    ack <= 0;
-    data_rcvd_arr[0] = body1;
-    data_rcvd_arr[1] = body2;
-    data_rcvd_arr[2] = body3;
-    data_rcvd_arr[3] = body4;
-    for (i = 1; i <= 4; i = i + 1) begin
-      @(posedge ready);
-      @(negedge sclk) ack <= 1; data_rcvd <= dout;
-      @(negedge sclk) ack <= 1; data_rcvd <= data_rcvd << 8 | dout;
-      @(negedge sclk) ack <= 0;
-      $display("%t: Frame %d received", $time, data_rcvd);
-      if (data_rcvd !== data_rcvd_arr[i]) begin
-        $display("Frame %d mismatch", i);
-        $display("Expected: %h", data_rcvd_arr[i-1]);
-        $display("Received: %h", data_rcvd);
-        $finish;
-      end
-      f_rcvd = f_rcvd + 1;
+  initial
+    begin : RESPONSE
+      reg [15:0] data_rcvd, data_array[1:4] ;
+      integer frame ;
+      @(negedge SCLK);
+      ACK <= 0 ;
+      data_array[1] = BODY1 ;
+      data_array[2] = BODY2 ;
+      data_array[3] = BODY3 ;
+      data_array[4] = BODY4 ;
+      for (frame=1; frame<=4; frame=frame+1)
+        begin
+          @(posedge READY);
+          @(negedge SCLK) ACK <= 1 ; data_rcvd = DOUT ;
+          @(negedge SCLK) ACK <= 1 ; data_rcvd = data_rcvd << 8 | DOUT ;
+          @(negedge SCLK) ACK <= 0 ;
+          $display ( "%t: Rcvd data %h", $time, data_rcvd ) ;
+          if ( data_rcvd !== data_array[frame] )
+            begin
+              $display ( "ERROR: Want data %h", data_array[frame] ) ;
+              $finish;
+            end
+          frames_rcvd = frames_rcvd + 1 ;
+        end
+      $display ( "%t: Response process complete", $time ) ;
     end
-    $display("%t: Response complete", $time);
-  end
+
+
 endmodule
