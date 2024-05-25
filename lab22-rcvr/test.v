@@ -30,10 +30,10 @@ module test;
   reg [15:0] BODY1, BODY2, BODY3, BODY4 ;
 
   always begin
-    #`CLOCK_TIME SCLK = ~SCLK;
+    #(`CLOCK_TIME) SCLK = ~SCLK;
   end
 
-  initial begin
+  initial begin : STIM
     reg [0:255] stream;
     integer bit;
     BODY1 = $random;
@@ -57,8 +57,7 @@ module test;
     $finish;
   end
 
-  initial
-    begin : RESPONSE
+  initial begin : RESPONSE
       reg [15:0] data_rcvd, data_array[1:4] ;
       integer frame ;
       @(negedge SCLK);
