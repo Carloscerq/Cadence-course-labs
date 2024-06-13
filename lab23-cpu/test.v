@@ -30,7 +30,6 @@ module test_cpu();
 
   initial begin
     $display("Running setup...");
-    reset();
 
     init();
     $stop;
@@ -52,18 +51,19 @@ module test_cpu();
     begin
       case (run.number)
         1: cmp_num = 5'h17;
-        2: cmp_num = 5'h17;
-        3: cmp_num = 5'h17;
+        2: cmp_num = 5'h10;
+        3: cmp_num = 5'h0c;
       endcase
-      if (cmp_num === halt) $display("SUCESS");
+      if (cmp_num === cpu_inst.pc) $display("SUCESS");
       else $display("ERROR");
     end
   endtask
 
-  always @(halt)
+  always @(posedge halt)
   begin
     endtst();
     init();
+    $stop;
   end
 
 endmodule
