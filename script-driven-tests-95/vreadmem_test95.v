@@ -16,6 +16,21 @@ defined above.
 4. And have the default display as "unknown command" for any other command encountered.
 5. Following tasks have been created for helping the creation of the second part of the loop in this procedure.*/
 
+  $readmemh("data.txt", cmdarr);
+  for (i = 0; i < 7; i = i + 1) begin
+    cmd = cmdarr[i];
+    $display("Command: %h", cmd);
+     if (cmd === 16'bx) begin
+       $display("end of commands");
+       $finish;
+      end
+    case (cmd[15: 12])
+      SEND: do_send(cmd[12: 4], cmd[4: 0]);
+      ADDR: do_addr(cmd[12: 4]);
+      NEXT: do_next(cmd[12: 4]);
+      default: $display("Unknown command");
+    endcase
+  end
    end
 
   task do_addr(input [7:0] addr);
