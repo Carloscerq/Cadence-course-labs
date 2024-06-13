@@ -6,8 +6,8 @@ module fileread2001;
  integer fid, c1;
  integer i;
 
- initial
- begin
+  initial
+  begin
 
 /* write a procedure using the system task $fopen to get the commands from cmd.txt 
 1. Have fid= fopen the cmd.txt
@@ -17,8 +17,25 @@ module fileread2001;
 5. Following tasks have been created for helping the creation of the second part of the loop in this procedure.
 */
 
+  fid = $fopen("cmd.txt", "r");
+  while (!$feof(fid)) begin
+    $display("Reading struction....");
+    c1 = $fscanf(fid, "%4c %2h", cmd, addr);
+    $display("%s", cmd);
+    case (cmd)
+      "SEND": begin
+        c1 = $fscanf(fid, " %h", data);
+        do_send(addr, data);
+      end
+      "ADDR": do_addr(addr);
+      "NEXT": do_next(addr);
+      default: $display("Unknown command");
+    endcase
+    c1 = $fscanf(fid, "\n");
+  end
 
-     end    // initial
+
+  end    // initial
 
   task do_addr(input [1:0] addr);
     begin
