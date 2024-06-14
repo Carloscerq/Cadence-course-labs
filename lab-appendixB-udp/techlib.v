@@ -2,26 +2,12 @@
 
 `celldefine
 
-/* BUF */
-
-module bfr (
-  input  wire A ,
-  output wire Y );
-  supply1 Vdd;
-  supply0 Vss;
-  nmos (Y, Vdd, A);
-  pmos (Y, Vss, A);
-endmodule
-
 /* NOT */
 
 module inv (
   input  wire A ,
   output wire Y );
-  supply1 Vdd;
-  supply0 Vss;
-  pmos (Y, Vdd, A);
-  nmos (Y, Vss, A);
+  not (Y, A);
 endmodule
 
 
@@ -31,7 +17,7 @@ module tribuf (
   input  wire A ,
   input  wire E ,
   output wire Y );
-  nmos (Y, A, E);
+  bufif1 (Y, A, E);
 endmodule
 
 
@@ -44,10 +30,7 @@ module nd2 (
   input  wire A ,
   input  wire B ,
   output wire Y );
-  supply1 Vdd;
-  supply0 Vss;
-  pmos (Y,  Vdd, A), (Y, Vdd, B);
-  nmos (ya, Vss, A), (Y, ya,  B);
+  nand (Y, A, B);
 endmodule
 
 module nd3 (
@@ -55,10 +38,7 @@ module nd3 (
   input  wire B ,
   input  wire C ,
   output wire Y );
-  supply1 Vdd;
-  supply0 Vss;
-  pmos (Y,  Vdd, A), (Y, Vdd, B), (Y, Vdd, C);
-  nmos (ya, Vss, A), (yb, ya, B), (Y, yb,  C);
+  nand (Y, A, B, C);
 endmodule
 
 module nd8 (
@@ -71,12 +51,7 @@ module nd8 (
   input  wire G ,
   input  wire H ,
   output wire Y );
-  supply1 Vdd;
-  supply0 Vss;
-  pmos (Y,  Vdd, A), (Y, Vdd, B), (Y, Vdd, C), (Y, Vdd, D),
-       (Y,  Vdd, E), (Y, Vdd, F), (Y, Vdd, G), (Y, Vdd, H);
-  nmos (ya, Vss, A), (yb, ya, B), (yc, yb, C), (yd, yc, D),
-       (ye, yd,  E), (yf, ye, F), (yg, yf, G), (Y,  yg, H);
+  nand (Y, A, B, C, D, E, F, G, H);
 endmodule
 
 
@@ -86,10 +61,7 @@ module or2 (
   input  wire A ,
   input  wire B ,
   output wire Y );
-  supply1 Vdd;
-  supply0 Vss;
-  nmos (Y,  Vdd, A), (Y, Vdd, B);
-  pmos (ya, Vss, A), (Y, ya,  B);
+  or (Y, A, B);
 endmodule
 
 
@@ -99,10 +71,7 @@ module nr2 (
   input  wire A ,
   input  wire B ,
   output wire Y );
-  supply1 Vdd;
-  supply0 Vss;
-  pmos (ya, Vdd, A), (Y, ya,  B);
-  nmos (Y,  Vss, A), (Y, Vss, B);
+  nor (Y, A, B);
 endmodule
 
 module nr3 (
@@ -110,10 +79,7 @@ module nr3 (
   input  wire B ,
   input  wire C ,
   output wire Y );
-  supply1 Vdd;
-  supply0 Vss;
-  pmos (ya, Vdd, A), (yb, ya,  B), (Y, yb,  C);
-  nmos (Y,  Vss, A), (Y,  Vss, B), (Y, Vss, C);
+  nor (Y, A, B, C);
 endmodule
 
 
@@ -124,10 +90,8 @@ module ao21 (
   input  wire B ,
   input  wire C ,
   output wire Y );
-  supply1 Vdd;
-  supply0 Vss;
-  pmos (pa, Vdd, A), (pa, Vdd, B), (Y, pa,  C);
-  nmos (na, Vss, A), (Y,  na,  B), (Y, Vss, C);
+  and (ab, A, B);
+  nor (Y, ab, C);
 endmodule
 
 module ao211 (
@@ -136,10 +100,8 @@ module ao211 (
   input  wire C ,
   input  wire D ,
   output wire Y );
-  supply1 Vdd;
-  supply0 Vss;
-  pmos (pa, Vdd, A), (pa, Vdd, B), (pb, pa,  C), (Y, pb,  D);
-  nmos (na, Vss, A), (Y,  na,  B), (Y,  Vss, C), (Y, Vss, D);
+  and (ab, A, B);
+  nor (Y, ab, C, D);
 endmodule
 
 
@@ -150,10 +112,8 @@ module oa21 (
   input  wire B ,
   input  wire C ,
   output wire Y );
-  supply1 Vdd;
-  supply0 Vss;
-  pmos (pa, Vdd, A), (Y,  pa,  B), (Y, Vdd, C);
-  nmos (na, Vss, A), (na, Vss, B), (Y, na,  C);
+  or (ab, A, B);
+  nand (Y, ab, C);
 endmodule
 
 module oa211 (
@@ -162,37 +122,21 @@ module oa211 (
   input  wire C ,
   input  wire D ,
   output wire Y );
-  supply1 Vdd;
-  supply0 Vss;
-  pmos (pa, Vdd, A), (Y,  pa,  B), (Y, Vdd, C), (Y, Vdd, D);
-  nmos (na, Vss, A), (na, Vss, B), (nb, na, C), (Y, nb,  D);
+  or (ab, A, B);
+  nand (Y, ab, C, D);
 endmodule
 
 
 /* D-TYPE FLIP-FLOPS */
-// Master Slave D Flipflop Implementation
 
 module dff_neg (
   input  wire D   ,
   input  wire CKN ,
   output wire Q   );
-  bfr bfr1 (CKN, ckn);
-  inv inv1 (CKN, ck );
-  // buffer d
-  inv inv2 (D, d1);
-  // master latch
-  cmos cmos1 (d2, d1, ckn, ck);
-  inv inv3 (d2,     mq );
-  inv inv4 (mq,     mqn);
-  cmos cmos2 (d2, mqn, ck, ckn);
-  // slave latch
-  cmos cmos3 (d3, mq, ck, ckn);
-  inv inv5 (d3,      sqn);
-  inv inv6 (sqn,     sq );
-  cmos cmos4 (d3, sq, ckn, ck);
-  // buffer q
-  inv inv7 (sqn, Q );
-  bfr bfr2 (sqn, QN);
+  supply1 Vdd;
+  not (ck, CKN);
+  UDP_DFFRS (q, D, ck, Vdd, Vdd);
+  buf (Q,  q);
 endmodule
 
 module dffr (
@@ -200,23 +144,10 @@ module dffr (
   input  wire CK ,
   input  wire RN ,
   output wire Q  );
-  bfr bfr1 (CK, ck );
-  inv inv1 (CK, ckn);
-  // buffer d
-  inv inv2 (D, d1);
-  // master latch
-  cmos cmos1 (d2, d1, ckn, ck);
-  inv inv3 (d2,     mq );
-  nd2 nd22 (mq, RN, mqn);
-  cmos cmos2 (d2, mqn, ck, ckn);
-  // slave latch
-  cmos cmos3 (d3, mq, ck, ckn);
-  nd2 nd23 (d3,  RN, sqn);
-  inv inv4 (sqn,     sq );
-  cmos cmos4 (d3, sq, ckn, ck);
-  // buffer q
-  inv inv5 (sqn, Q );
-  bfr bfr2 (sqn, QN);
+  supply1 Vdd;
+  UDP_DFFRS (q, D, CK, RN, Vdd);
+  buf (Q,  q);
+  not (QN, q);
 endmodule
 
 module dffs (
@@ -225,23 +156,10 @@ module dffs (
   input  wire SN ,
   output wire Q  ,
   output wire QN );
-  bfr bfr1 (CK, ck );
-  inv inv1 (CK, ckn);
-  // buffer d
-  inv inv2 (D, d1);
-  // master latch
-  cmos cmos1 (d2, d1, ckn, ck);
-  nd2 nd21 (d2, SN, mq );
-  inv inv3 (mq,     mqn);
-  cmos cmos2 (d2, mqn, ck, ckn);
-  // slave latch
-  cmos cmos3 (d3, mq, ck, ckn);
-  inv inv4 (d3,      sqn);
-  nd2 nd24 (sqn, SN, sq );
-  cmos cmos4 (d3, sq, ckn, ck);
-  // buffer q
-  inv inv5 (sqn, Q );
-  bfr bfr2 (sqn, QN);
+  supply1 Vdd;
+  UDP_DFFRS (q, D, CK, Vdd, SN);
+  buf (Q,  q);
+  not (QN, q);
 endmodule
 
 module dffrs (
@@ -251,23 +169,30 @@ module dffrs (
   input  wire SN ,
   output wire Q  ,
   output wire QN );
-  bfr bfr1 (CK, ck );
-  inv inv1 (CK, ckn);
-  // buffer d
-  inv inv2 (D, d1);
-  // master latch
-  cmos cmos1 (d2, d1, ckn, ck);
-  nd2 nd21 (d2, SN, mq );
-  nd2 nd22 (mq, RN, mqn);
-  cmos cmos2 (d2, mqn, ck, ckn);
-  // slave latch
-  cmos cmos3 (d3, mq, ck, ckn);
-  nd2 nd23 (d3,  RN, sqn);
-  nd2 nd24 (sqn, SN, sq );
-  cmos cmos4 (d3, sq, ckn, ck);
-  // buffer q
-  inv inv3 (sqn, Q );
-  bfr bfr2 (sqn, QN);
+  UDP_DFFRS (q, D, CK, RN, SN);
+  buf (Q,  q);
+  not (QN, q);
 endmodule
 
 `endcelldefine
+
+primitive UDP_DFFRS (Q, D, CK, RN, SN);
+  output Q; reg Q;
+  input D;
+  input CK;
+  input RN;
+  input SN;
+  table
+  // D C R S : Q : Qnext
+     ? ? ? 0 : ? : 1; // preset
+     ? ? 1 * : 1 : -; // pessimism
+     ? ? 0 1 : ? : 0; // reset
+     ? ? * 1 : 0 : -; // pessimism
+     1 r 1 1 : ? : 1; // clock 1
+     1 p 1 1 : 1 : -; // pessimism
+     0 r 1 1 : ? : 0; // clock 0
+     0 p 1 1 : 0 : -; // pessimism
+     ? n ? ? : ? : -; // clock negedge
+     * ? ? ? : ? : -; // data edge
+  endtable
+endprimitive
