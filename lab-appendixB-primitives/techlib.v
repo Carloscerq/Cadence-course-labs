@@ -6,9 +6,9 @@
 
 module inv (
   input  wire A ,
-  output reg  Y );
-  always @* Y = ~(A) ;
-endmodule
+  output wire  Y );
+  not (Y, A);
+  endmodule
 
 
 /* BUFIF1 */
@@ -16,8 +16,9 @@ endmodule
 module tribuf (
   input  wire A ,
   input  wire E ,
-  output reg  Y );
-  always @* Y = E ? A : 'bz ;
+  output wire  Y );
+  //always @* Y = E ? A : 'bz ;
+  bufif1(Y, A, E);
 endmodule
 
 
@@ -29,16 +30,18 @@ endmodule
 module nd2 (
   input  wire A ,
   input  wire B ,
-  output reg  Y );
-  always @* Y = ~(A & B);
+  output wire  Y );
+  //always @* Y = ~(A & B);
+  nand(Y, A, B);
 endmodule
 
 module nd3 (
   input  wire A ,
   input  wire B ,
   input  wire C ,
-  output reg  Y );
-  always @* Y = ~(A & B & C);
+  output wire  Y );
+  //always @* Y = ~(A & B & C);
+  nand(Y, A, B, C);
 endmodule
 
 module nd8 (
@@ -50,8 +53,9 @@ module nd8 (
   input  wire F ,
   input  wire G ,
   input  wire H ,
-  output reg  Y );
-  always @* Y = ~(A & B & C & D & E & F & G & H);
+  output wire  Y );
+  //always @* Y = ~(A & B & C & D & E & F & G & H);
+  nand(Y, A, B, C, D, E, F, G, H);
 endmodule
 
 
@@ -60,8 +64,9 @@ endmodule
 module or2 (
   input  wire A ,
   input  wire B ,
-  output reg  Y );
-  always @* Y = (A | B);
+  output wire  Y );
+  //always @* Y = (A | B);
+  or (Y, A, B);
 endmodule
 
 
@@ -70,16 +75,18 @@ endmodule
 module nr2 (
   input  wire A ,
   input  wire B ,
-  output reg  Y );
-  always @* Y = ~(A | B);
+  output wire  Y );
+  //always @* Y = ~(A | B);
+  nor(Y, A, B);
 endmodule
 
 module nr3 (
   input  wire A ,
   input  wire B ,
   input  wire C ,
-  output reg  Y );
-  always @* Y = ~(A | B | C);
+  output wire  Y );
+  //always @* Y = ~(A | B | C);
+  nor ( Y, A, B, C);
 endmodule
 
 
@@ -89,8 +96,12 @@ module ao21 (
   input  wire A ,
   input  wire B ,
   input  wire C ,
-  output reg  Y );
-  always @* Y = ~((A & B) | C);
+  output wire  Y );
+  //always @* Y = ~((A & B) | C);
+  wire aux1, aux2;
+  and(aux1, A, B);
+  or (aux2, aux1, C);
+  not (Y, aux2);
 endmodule
 
 module ao211 (
@@ -98,8 +109,12 @@ module ao211 (
   input  wire B ,
   input  wire C ,
   input  wire D ,
-  output reg  Y );
-  always @* Y = ~((A & B) | C | D);
+  output wire  Y );
+  //always @* Y = ~((A & B) | C | D);
+  wire aux1, aux2;
+  and(aux1, A, B);
+  or (aux2, aux1, C, D);
+  not (Y, aux2);
 endmodule
 
 
@@ -109,8 +124,12 @@ module oa21 (
   input  wire A ,
   input  wire B ,
   input  wire C ,
-  output reg  Y );
-  always @* Y = ~((A | B) & C);
+  output wire  Y );
+  //always @* Y = ~((A | B) & C);
+  wire aux1, aux2;
+  or (aux1, A, B);
+  and (aux2, aux1, C);
+  not (Y, aux2);
 endmodule
 
 module oa211 (
@@ -118,43 +137,55 @@ module oa211 (
   input  wire B ,
   input  wire C ,
   input  wire D ,
-  output reg  Y );
-  always @* Y = ~((A | B) & C & D);
+  output wire  Y );
+  //always @* Y = ~((A | B) & C & D);
+  wire aux1, aux2;
+  or (aux1, A, B);
+  and (aux2, aux1, C, D);
+  not (Y, aux2);
 endmodule
 
 
 /* D-TYPE FLIP-FLOPS */
 
+
 module dff_neg (
   input  wire D   ,
   input  wire CKN ,
-  output reg  Q   );
-  always @(negedge CKN)
-    Q <= D ;
+  output wire Q   );
+  nor  (mq,  mqn, sqn, CKN);
+  nor  (mqn, mq,       D  );
+  nor  (sq,  sqn, mqn     );
+  nor  (sqn, sq,       CKN);
+  nor  (Q,      sqn, QN);
+  nor  (QN,     mq,  Q );
 endmodule
 
 module dffr (
   input  wire D  ,
   input  wire CK ,
   input  wire RN ,
-  output reg  Q  );
-  always @(posedge CK,
-           negedge RN)
-    Q <= RN ? D : 'b0 ;
+  output wire Q  );
+  nand (mq,  mqn, sqn, CK);
+  nand (mqn, mq,  RN,  D );
+  nand (sq,  sqn, mqn    );
+  nand (sqn, sq,  RN,  CK);
+  nand (Q,      sqn, QN);
+  nand (QN, RN, mq,  Q );
 endmodule
 
 module dffs (
   input  wire D  ,
   input  wire CK ,
   input  wire SN ,
-  output reg  Q  ,
-  output reg  QN );
-  always @(posedge CK,
-           negedge SN)
-    begin
-      Q  <= SN ?  D : 'b1;
-      QN <= SN ? ~D : 'b0;
-    end
+  output wire Q  ,
+  output wire QN );
+  nand (mq,  mqn, sqn, CK);
+  nand (mqn, mq,       D );
+  nand (sq,  sqn, mqn, SN);
+  nand (sqn, sq,       CK);
+  nand (Q,  SN, sqn, QN);
+  nand (QN,     mq,  Q );
 endmodule
 
 module dffrs (
@@ -162,15 +193,14 @@ module dffrs (
   input  wire CK ,
   input  wire RN ,
   input  wire SN ,
-  output reg  Q  ,
-  output reg  QN );
-  always @(posedge CK,
-           negedge RN,
-           negedge SN)
-    begin
-      Q  <= SN ? RN ?  D : 'b0 : 1'b1; // SN beats RN
-      QN <= RN ? SN ? ~D : 'b0 : 1'b1; // RN beats SN
-    end
+  output wire Q  ,
+  output wire QN );
+  nand (mq,  mqn, sqn, CK);
+  nand (mqn, mq,  RN,  D );
+  nand (sq,  sqn, mqn, SN);
+  nand (sqn, sq,  RN,  CK);
+  nand (Q,  SN, sqn, QN);
+  nand (QN, RN, mq,  Q );
 endmodule
 
 `endcelldefine
